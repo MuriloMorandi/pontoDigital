@@ -3,6 +3,7 @@ import { createMiddleware } from 'hono/factory'
 import {hasEmail} from "../dbFunctions/hasEmail";
 import { emailRegex } from '../../../utils/regex';
 import { ValidationError } from '../../../exception/ValidationError';
+import { log } from 'console';
 
 
 export const validacaoAtualizacaoDados = createMiddleware( async (c:any, next:any) => {
@@ -15,6 +16,11 @@ export const validacaoAtualizacaoDados = createMiddleware( async (c:any, next:an
     try
     {
         const formErrors = [];
+        if (id == 0)
+        {
+            throw new Error("Funcioanrio inválido");
+        }
+
         if (!nome)
         {
             formErrors.push({"Nome": "Campo é obrigatório"});
@@ -24,7 +30,7 @@ export const validacaoAtualizacaoDados = createMiddleware( async (c:any, next:an
         {
             formErrors.push({"Email": "Email inválido"});
         } else if (await hasEmail(email,  id)) {
-            throw new Error("Email já cadastrado");
+            formErrors.push({ "Email": "Email já cadastrado" });
         }
 
         if (formErrors.length > 0)
