@@ -5,12 +5,12 @@ import { emailRegex } from '../../../utils/regex';
 import { ValidationError } from '../../../exception/ValidationError';
 
 
-export const validacaoDadosFuncionario = createMiddleware(
-    async (c, next) => {
+export const validacaoAtualizacaoDados = createMiddleware( async (c:any, next:any) => {
     const {
         nome,
         email
     } = await c.req.json();
+    const id = c.req.param('id');
 
     try
     {
@@ -23,7 +23,7 @@ export const validacaoDadosFuncionario = createMiddleware(
         if (!emailRegex.test(email))
         {
             formErrors.push({"Email": "Email inválido"});
-        } else if (await hasEmail(email)) {
+        } else if (await hasEmail(email,  id)) {
             throw new Error("Email já cadastrado");
         }
 
@@ -44,4 +44,4 @@ export const validacaoDadosFuncionario = createMiddleware(
         return c.json({message: error.message}, 400);
     }
 
-})
+});

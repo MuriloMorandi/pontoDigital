@@ -1,63 +1,32 @@
 import {Hono} from 'hono'
 
-import {registerFuncionario} from "./dbFunctions/registerFuncionario";
-import {hasEmail} from "./dbFunctions/hasEmail";
-import {getAllFuncionarios} from "./dbFunctions/getAllFuncionarios";
-import {deleteFuncionario} from "./dbFunctions/deleteFuncionario";
-import {updateFuncionario} from "./dbFunctions/updateFuncionario";
 import {validacaoDadosFuncionario} from "./middlewares/validacaoDadosFuncionario";
+import {validacaoAtualizacaoDados} from "./middlewares/validacaoAtualizacaoDados"
+
+import {cadastroUseCase} from "./useCases/cadastro.useCase";
+import {buscaTodosUseCase} from "./useCases/buscaTodos.useCase";
+import {atualizaUseCase} from "./useCases/atualiza.useCase";
+import {desativaUseCase} from "./useCases/desativa.useCase";
 
 
-const app = new Hono();
+const routesFuncionario = new Hono();
 
-app.post('/',
-    validacaoDadosFuncionario, async (c: any) => {
-        const {
-            nome,
-            email
-        } = await c.req.json();
-
-        try {
-            const data = await registerFuncionario(nome, email);
-
-            return c.json({message: "Funcionario criado com sucesso!", data}, 201, {
-                "X-Custom": "Thank you",
-            });
-        } catch (error: any) {
-            console.log(error)
-            return c.json({message: error.message}, 400);
-        }
-});
-
-app.get('/', async (c: any) =>
-    c.json(await getAllFuncionarios())
+routesFuncionario.post('/',
+    validacaoDadosFuncionario,
+    cadastroUseCase
 );
 
-app.put('/:id', async (c: any) => {
-    const {
-        nome,
-        email
-    } = await c.req.json();
-    const id = c.req.param('id');
+routesFuncionario.get('/',
+    buscaTodosUseCase
+);
 
-    try {
-        if (await hasEmail(email, id)) {
-            throw new Error("Email já cadastrado");
-        }
+routesFuncionario.put('/:id',
+    validacaoAtualizacaoDados,
+    atualizaUseCase
+);
 
-        await updateFuncionario(id, nome, email);
+routesFuncionario.delete('/:id',
+    desativaUseCase
+);
 
-        return c.json({message: "Funcionario atualizado com sucesso!"}, 200);
-    } catch (error: any) {
-        return c.json({message: error.message}, 400);
-    }
-});
-
-app.delete('/:id', async (c: any) => {
-    const id = c.req.param('id');
-    await deleteFuncionario(id);
-    c.json({message: "Funcionario desativado"}, 201);
-});
-
-
-export default app;
+export default routesFuncionario;
